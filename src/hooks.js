@@ -1,25 +1,30 @@
-const { Doc } = require('@farahub/framework/facades');
+const { Doc, Injection } = require('@farahub/framework/facades');
 const mongoose = require('mongoose');
 
 const { ObjectId } = mongoose.Types;
 
 
-const hooks = {
+const hooks = (module) => ({
     'Invoices': {
         'main.createOrUpdate.postSave': async ({ invoice, data, invoiceId, connection }) => {
             if (!data.id) {
-
+                const Transaction = connection.model('Transaction');
                 const Client = connection.model('Person');
-                const client = await Doc.resolve(invoice.client, Client);
+                
+                const client = await Doc.resolve(invoice.customer, Client);
                 const deposit = data.deposit ? Number(data.deposit) : 0;
 
                 if (deposit > 0) {
-                    const transaction = await client.addTransaction({
+                    const transaction = await Transaction.createOrUpdate({
                         amount: deposit,
-                        type: 'RECEIVEABLE',
+                        client: client,
+                        type: Transaction.TYPE_RECEIVEABLE,
                         createdAt: invoice.createdAt,
                         referenceModel: 'Invoice',
                         reference: invoice.id
+                    }, null, {
+                        connection,
+                        inject: Injection.register(module.app.module('Transactions'), 'main.createOrUpdate', { withRequest: false })
                     });
 
                     await transaction.markPaid();
@@ -30,11 +35,16 @@ const hooks = {
         },
         'main.createOrUpdate.validator': () => {
             return {
-                'deposit': 'numeric'
+                'deposit': {
+                    in: ["body"],
+                    isInt: true,
+                    toInt: true,
+                    optional: true,
+                }
             }
         },
         'main.delete.preDelete': async ({ invoiceId, connection }) => {
-            
+
             // remove all related transactions
             await connection.model('Transaction').deleteMany({
                 referenceModel: 'Invoice',
@@ -53,7 +63,7 @@ const hooks = {
                 if (deposit > 0) {
                     const transaction = await client.addTransaction({
                         amount: deposit,
-                        type: 'RECEIVEABLE',
+                        type: Transaction.TYPE_RECEIVEABLE,
                         createdAt: contract.createdAt,
                         referenceModel: 'Contract',
                         reference: contract.id
@@ -67,11 +77,16 @@ const hooks = {
         },
         'contracts.createOrUpdate.validator': () => {
             return {
-                'deposit': 'numeric'
+                'deposit': {
+                    in: ["body"],
+                    isInt: true,
+                    toInt: true,
+                    optional: true,
+                }
             }
         },
         'contracts.delete.preDelete': async ({ contractId, connection }) => {
-            
+
             // remove all related transactions
             await connection.model('Transaction').deleteMany({
                 referenceModel: 'Contract',
@@ -79,6 +94,6 @@ const hooks = {
             });
         },
     },
-}
+})
 
 module.exports = hooks;

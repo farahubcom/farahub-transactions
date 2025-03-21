@@ -9,20 +9,19 @@ class Invoice {
      * @return void
      */
     async calculateRemaining() {
-
         const Transaction = this.model('Transaction');
         const Invoice = this.model('Invoice');
 
         const remaining = {
             referenceModel: 'Invoice',
             reference: this.id,
-            client: this.client,
-            type: 'RECEIVEABLE',
+            client: this.customer,
+            type: Transaction.TYPE_RECEIVEABLE,
             paidAt: null,
         }
 
         const invoice = await Invoice.findById(this.id).populate([
-            { path: "transactions" },
+            // { path: "transactions" },
             { path: "items" },
         ]);
 
@@ -60,8 +59,8 @@ class Invoice {
                 {
                     referenceModel: 'Invoice',
                     reference: this.id,
-                    client: this.client,
-                    type: 'RECEIVEABLE',
+                    client: this.customer,
+                    type: Transaction.TYPE_RECEIVEABLE,
                     paidAt: null
                 },
                 { paidAt: new Date() }
@@ -81,8 +80,8 @@ class Invoice {
             const unpaids = await Transaction.count({
                 referenceModel: 'Invoice',
                 reference: this.id,
-                client: this.client,
-                type: 'RECEIVEABLE',
+                client: this.customer,
+                type: Transaction.TYPE_RECEIVEABLE,
                 paidAt: null
             });
 
@@ -102,8 +101,8 @@ class Invoice {
             const transactions = await Transaction.find({
                 referenceModel: 'Invoice',
                 reference: this.id,
-                client: this.client,
-                type: 'RECEIVEABLE',
+                client: this.customer,
+                type: Transaction.TYPE_RECEIVEABLE,
                 paidAt: { $ne: null }
             });
 
@@ -126,6 +125,8 @@ class Invoice {
                 .populate([
                     { path: 'items' }
                 ])
+
+            console.log({ total: self.total, totalPaid })
 
             return self.total - totalPaid;
         } catch (error) {

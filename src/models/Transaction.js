@@ -9,6 +9,14 @@ const { ObjectId } = mongoose.Types;
 class Transaction {
 
     /**
+     * Type constants
+     * 
+     * @var string
+     */
+    static TYPE_RECEIVEABLE = 'receiveable';
+    static TYPE_PAYABLE = 'payable';
+
+    /**
      * Create new or update an existing transaction
      * 
      * @param {Object} data 
@@ -20,10 +28,7 @@ class Transaction {
         try {
             const Transaction = this.model('Transaction');
 
-            const transaction = transactionId ?
-                await Transaction.findById(
-                    ObjectId(transactionId)
-                ) : new Transaction();
+            const transaction = transactionId ? await Transaction.findById(ObjectId(transactionId)) : new Transaction();
 
             if (transaction.isNew) {
 

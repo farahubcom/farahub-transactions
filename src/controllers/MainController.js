@@ -2,7 +2,6 @@ const { Controller } = require('@farahub/framework/foundation');
 const { Doc, Auth, Workspace, Injection, Validator } = require('@farahub/framework/facades');
 const mongoose = require('mongoose');
 const { upperFirst, camelCase } = require('lodash');
-const TransactionsListValidator = require('../validators/TransactionsListValidator');
 
 
 const { ObjectId } = mongoose.Types;
@@ -158,7 +157,6 @@ class MainController extends Controller {
             Auth.authenticate('jwt', { session: false }),
             Workspace.resolve(this.app),
             Injection.register(this.module, 'main.list'),
-            Validator.validate(new TransactionsListValidator()),
             async function (req, res, next) {
                 try {
                     const { model, modelId } = req.params;
@@ -213,7 +211,9 @@ class MainController extends Controller {
                 try {
                     const { model, modelId } = req.params;
 
-                    const document = await Doc.resolve(modelId, model);
+                    const ModelClass = req.wsConnection.model(upperFirst(camelCase(model)))
+
+                    const document = await Doc.resolve(modelId, ModelClass);
 
                     const isSettled = await document.isSettled();
 
@@ -239,7 +239,9 @@ class MainController extends Controller {
                 try {
                     const { model, modelId } = req.params;
 
-                    const document = await Doc.resolve(modelId, model);
+                    const ModelClass = req.wsConnection.model(upperFirst(camelCase(model)))
+
+                    const document = await Doc.resolve(modelId, ModelClass);
 
                     const totalPaid = await document.getTotalPaid();
 
@@ -265,7 +267,9 @@ class MainController extends Controller {
                 try {
                     const { model, modelId } = req.params;
 
-                    const document = await Doc.resolve(modelId, model);
+                    const ModelClass = req.wsConnection.model(upperFirst(camelCase(model)))
+
+                    const document = await Doc.resolve(modelId, ModelClass);
 
                     const remaining = await document.getRemaining();
 
