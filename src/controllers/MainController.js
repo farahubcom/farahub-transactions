@@ -295,7 +295,9 @@ class MainController extends Controller {
                 try {
                     const { model, modelId } = req.params;
 
-                    const document = await Doc.resolve(modelId, model);
+                    const ModelClass = req.wsConnection.model(upperFirst(camelCase(model)))
+
+                    const document = await Doc.resolve(modelId, ModelClass);
 
                     await document.settle();
 
@@ -336,9 +338,9 @@ class MainController extends Controller {
 
                     const data = req.body;
 
-                    const Model = req.wsConnection.model(model);
+                    const ModelClass = req.wsConnection.model(upperFirst(camelCase(model)))
 
-                    const document = await Model
+                    const document = await ModelClass
                         .findById(modelId)
                         .populate([
                             { path: "transactions" },
@@ -356,7 +358,7 @@ class MainController extends Controller {
                     const transaction = await Transaction.createOrUpdate({
                         client: document.client,
                         amount: data.amount,
-                        type: 'RECEIVEABLE',
+                        type: Transaction.TYPE_RECEIVEABLE,
                         reference: document.id,
                         referenceModel: model
                     });
