@@ -1,6 +1,6 @@
 {
     "name": "@farahub/transactions",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Transactions module for the Farahub framework",
     "repository": {
         "type": "git",

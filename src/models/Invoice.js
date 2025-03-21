@@ -76,7 +76,7 @@ class Invoice {
     async isSettled() {
         try {
             const totalPaid = await this.getTotalPaid();
-            return self.total < totalPaid;
+            return this.total < totalPaid;
             // const Transaction = this.model('Transaction');
 
             // const unpaids = await Transaction.count({
