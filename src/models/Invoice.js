@@ -75,17 +75,19 @@ class Invoice {
      */
     async isSettled() {
         try {
-            const Transaction = this.model('Transaction');
+            const totalPaid = await this.getTotalPaid();
+            return self.total < totalPaid;
+            // const Transaction = this.model('Transaction');
 
-            const unpaids = await Transaction.count({
-                referenceModel: 'Invoice',
-                reference: this.id,
-                client: this.customer,
-                type: Transaction.TYPE_RECEIVEABLE,
-                paidAt: null
-            });
+            // const unpaids = await Transaction.count({
+            //     referenceModel: 'Invoice',
+            //     reference: this.id,
+            //     client: this.customer,
+            //     type: Transaction.TYPE_RECEIVEABLE,
+            //     paidAt: null
+            // });
 
-            return unpaids < 1;
+            // return unpaids < 1;
         } catch (error) {
             throw error;
         }
@@ -125,8 +127,6 @@ class Invoice {
                 .populate([
                     { path: 'items' }
                 ])
-
-            console.log({ total: self.total, totalPaid })
 
             return self.total - totalPaid;
         } catch (error) {
