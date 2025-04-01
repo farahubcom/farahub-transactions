@@ -241,22 +241,20 @@ class InvoicesController extends Controller {
                     const invoice = await Invoice
                         .findById(ObjectId(invoiceId))
                         .populate([
-                            { path: "transactions" },
                             { path: "items" }
                         ]);
 
-                    if (data.amount > invoice.remaining) {
+                    const remaining = await invoice.getRemaining();
+
+                    if (data.amount > remaining) {
                         return res.json({ ok: false, error: 'amount is more than invoice remaining' });
                     }
-
-                    // const Client = req.wsConnection.model('Person');
-                    // const client = await Doc.resolve(invoice.client, Client);
 
                     const Transaction = req.wsConnection.model('Transaction');
                     const transaction = await Transaction.createOrUpdate({
                         client: invoice.client,
                         amount: data.amount,
-                        type: 'RECEIVEABLE',
+                        type: Transaction.TYPE_RECEIVEABLE,
                         reference: invoice.id,
                         referenceModel: 'Invoice'
                     });
@@ -272,8 +270,6 @@ class InvoicesController extends Controller {
             }
         ]
     }
-
-    //
 }
 
 module.exports = InvoicesController;

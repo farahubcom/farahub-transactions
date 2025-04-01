@@ -30,6 +30,13 @@ const TransactionSchema = new Schema({
      * @var string
      */
     collection: "transactions:transactions",
+
+    /**
+     * Enable collection timestamps
+     * 
+     * @var bool
+     */
+    timestamps: true,
 });
 
 TransactionSchema.plugin(mongooseLeanVirtuals);
