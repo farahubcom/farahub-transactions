@@ -6,7 +6,22 @@ const { Schema } = mongoose;
 
 const PersonSchema = new Schema({
     //
-}, { timestamps: true });
+}, {
+
+    /**
+     * Name of the collection
+     * 
+     * @var string
+     */
+    collection: "people:people",
+    
+    /**
+     * Enable collection timestamps
+     * 
+     * @var bool
+     */
+    timestamps: true, 
+});
 
 
 PersonSchema.plugin(mongooseLeanVirtuals);

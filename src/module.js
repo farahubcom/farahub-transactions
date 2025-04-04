@@ -31,6 +31,15 @@ class TransactionsModule extends Module {
     basePath = '';
 
     /**
+     * The module dependencies
+     * 
+     * @var array
+     */
+    dependencies = [
+        'People'
+    ];
+
+    /**
      * The module hooks
      * 
      * @var object
