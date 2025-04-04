@@ -43,9 +43,9 @@ class ReportsController extends Controller {
                     const Transaction = req.wsConnection.model('Transaction');
 
                     const args = req.query;
-            
+
                     let matchStage = {};
-            
+
                     // Date range filtering
                     if (args && args.fromDate && isValid(fromUnixTime(args.fromDate))) {
                         matchStage.paidAt = {
@@ -53,14 +53,14 @@ class ReportsController extends Controller {
                             $gte: startOfDay(fromUnixTime(args.fromDate))
                         };
                     }
-            
+
                     if (args && args.toDate && isValid(fromUnixTime(args.toDate))) {
                         matchStage.paidAt = {
                             ...matchStage.paidAt,
                             $lt: endOfDay(fromUnixTime(args.toDate))
                         };
                     }
-            
+
                     // Group by transaction type to get totals
                     const report = await Transaction.aggregate([
                         { $match: matchStage },
@@ -72,14 +72,14 @@ class ReportsController extends Controller {
                             }
                         }
                     ]);
-            
+
                     // Format the response
                     const result = {
                         income: 0,
                         expense: 0,
                         net: 0
                     };
-            
+
                     report.forEach(item => {
                         if (item._id === Transaction.TYPE_RECEIVEABLE) {
                             result.income = item.totalAmount;
@@ -87,13 +87,10 @@ class ReportsController extends Controller {
                             result.expense = item.totalAmount;
                         }
                     });
-            
+
                     result.net = result.income - result.expense;
-            
-                    return res.json({ 
-                        ok: true, 
-                        ...result,
-                    });
+
+                    return res.json({ ok: true, ...result });
                 } catch (error) {
                     next(error);
                 }

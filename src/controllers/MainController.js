@@ -86,25 +86,8 @@ class MainController extends Controller {
             Auth.authenticate('jwt', { session: false }),
             Workspace.resolve(this.app),
             Injection.register(this.module, 'main.createOrUpdate'),
-            // Validator.validate(),
             async function (req, res, next) {
                 try {
-                    // const validator = new Validator(req.body, {
-                    //     'client': 'required',
-                    //     'amount': 'required|numeric',
-                    //     'type': 'required|in:RECEIVEABLE,PAYABLE',
-                    //     'note': 'string',
-                    // });
-
-                    // if (validator.fails()) {
-                    //     return res.status(422).json({
-                    //         ok: false,
-                    //         status: 422,
-                    //         message: 'Unprocessable Entity',
-                    //         errors: validator.errors.all()
-                    //     })
-                    // }
-
                     const Transaction = req.wsConnection.model('Transaction');
 
                     const transaction = await Transaction.createOrUpdate(req.body);
@@ -127,7 +110,6 @@ class MainController extends Controller {
             Auth.authenticate('jwt', { session: false }),
             Workspace.resolve(this.app),
             Injection.register(this.module, 'main.markPaid'),
-            // Validator.validate(),
             async function (req, res, next) {
                 try {
                     const { transactionId } = req.params;
@@ -321,46 +303,32 @@ class MainController extends Controller {
             Injection.register(this.module, 'main.addPayment'),
             async function (req, res, next) {
                 try {
-                    // const validator = new Validator(req.body, {
-                    //     'amount': 'required|numeric',
-                    // });
-
-                    // if (validator.fails()) {
-                    //     return res.status(422).json({
-                    //         ok: false,
-                    //         status: 422,
-                    //         message: 'Unprocessable Entity',
-                    //         errors: validator.errors.all()
-                    //     })
-                    // }
-
                     const { model, modelId } = req.params;
 
                     const data = req.body;
 
-                    const ModelClass = req.wsConnection.model(upperFirst(camelCase(model)))
+                    const modelClassname = upperFirst(camelCase(model));
+                    const ModelClass = req.wsConnection.model(modelClassname)
 
                     const document = await ModelClass
                         .findById(modelId)
                         .populate([
-                            { path: "transactions" },
                             { path: "items" }
                         ]);
 
-                    if (data.amount > document.remaining) {
+                    const remaining = await document.getRemaining();
+
+                    if (data.amount > remaining) {
                         return res.json({ ok: false, error: 'amount is more than invoice remaining' });
                     }
 
-                    // const Client = req.wsConnection.model('Person');
-                    // const client = await Doc.resolve(invoice.client, Client);
-
                     const Transaction = req.wsConnection.model('Transaction');
                     const transaction = await Transaction.createOrUpdate({
-                        client: document.client,
+                        client: document.customer,
                         amount: data.amount,
                         type: Transaction.TYPE_RECEIVEABLE,
                         reference: document.id,
-                        referenceModel: model
+                        referenceModel: modelClassname
                     });
 
                     await transaction.markPaid();

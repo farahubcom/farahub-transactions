@@ -24,7 +24,7 @@ class Transaction {
      * @param {{inject: func, connection: mongoose.Connection}}
      * @returns {Transaction}
      */
-    static async createOrUpdate(data, transactionId, { inject, connection }) {
+    static async createOrUpdate(data, transactionId, { inject, connection } = {}) {
         try {
             const Transaction = this.model('Transaction');
 
@@ -54,13 +54,13 @@ class Transaction {
             });
 
             // inject preSave hook
-            await inject('preSave', { transaction, data });
+            inject && await inject('preSave', { transaction, data });
 
             // save transaction
             await transaction.save();
 
             // inject postSave hook
-            await inject('postSave', { transaction, data })
+            inject && await inject('postSave', { transaction, data })
 
             // return modified transaction
             return transaction;

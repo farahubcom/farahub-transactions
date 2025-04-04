@@ -1,3 +1,4 @@
+const { Doc } = require("@farahub/framework/facades");
 const sumBy = require("lodash/sumBy");
 
 
@@ -21,7 +22,6 @@ class Invoice {
         }
 
         const invoice = await Invoice.findById(this.id).populate([
-            // { path: "transactions" },
             { path: "items" },
         ]);
 
@@ -75,19 +75,14 @@ class Invoice {
      */
     async isSettled() {
         try {
-            const totalPaid = await this.getTotalPaid();
-            return this.total > totalPaid;
-            // const Transaction = this.model('Transaction');
+            const Invoice = this.model('Invoice');
+            const self = await Doc.resolve(this._id, Invoice).populate([{ path: 'items' }])
 
-            // const unpaids = await Transaction.count({
-            //     referenceModel: 'Invoice',
-            //     reference: this.id,
-            //     client: this.customer,
-            //     type: Transaction.TYPE_RECEIVEABLE,
-            //     paidAt: null
-            // });
+            const totalPaid = await self.getTotalPaid();
 
-            // return unpaids < 1;
+            console.log({ 'total': self.total, 'totalPaid': totalPaid });
+
+            return self.total >= totalPaid;
         } catch (error) {
             throw error;
         }
@@ -119,22 +114,16 @@ class Invoice {
      */
     async getRemaining() {
         try {
-            const totalPaid = await this.getTotalPaid();
-
             const Invoice = this.model('Invoice');
-            const self = await Invoice
-                .findById(this.id)
-                .populate([
-                    { path: 'items' }
-                ])
+            const self = await Doc.resolve(this._id, Invoice).populate([{ path: 'items' }])
+
+            const totalPaid = await self.getTotalPaid();
 
             return self.total - totalPaid;
         } catch (error) {
             throw error;
         }
     }
-
-    //
 }
 
 module.exports = Invoice;
